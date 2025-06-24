@@ -1,0 +1,18 @@
+# Parameter grid for smooth_layer_thickness functional
+smooth_layer_thickness:
+  weight: [1e4, 5e4, 1e5, 5e5, 1e6]  # Different weight values
+  dhat: [1e-2, 5e-2, 1e-1, 2e-1]     # Different dhat values
+
+# Base configuration paths (relative to project root)
+base_config:
+  run_config: "cervix_inflation_EX_V2_original/run_MR_Conradlow.json"
+  state_config: "cervix_inflation_EX_V2_original/state_MR_Conradlow.json"
+  data_dir: "cervix_inflation_EX_V2_original"
+
+# HPC settings for Ginsburg
+hpc:
+  walltime: "04:00:00"      # Based on your typical 4-hour interactive sessions
+  nodes: 1
+  cpus_per_task: 16         # Based on your typical -c 16
+  memory: "128GB"           # Based on your typical --mem=128G
+  partition: ""             # Leave empty, Ginsburg uses account-based allocation
