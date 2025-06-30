@@ -11,7 +11,7 @@ base_config:
 
 # HPC settings for Ginsburg
 hpc:
-  walltime: "06:00:00"      # Based on your typical 4-hour interactive sessions
+  walltime: "07:00:00"      # Based on your typical 7-hour interactive sessions
   nodes: 1
   cpus_per_task: 16         # Based on your typical -c 16
   memory: "64GB"           # Based on your typical --mem=128G

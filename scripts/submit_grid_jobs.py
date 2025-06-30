@@ -97,7 +97,7 @@ def main():
                        help='Memory per job (default: 64G)')
     parser.add_argument('--cpus', default='16',
                        help='CPUs per job (default: 16)')
-    parser.add_argument('--walltime', default='04:00:00',
+    parser.add_argument('--walltime', default='06:00:00',
                        help='Wall time per job (default: 4 hours)')
     parser.add_argument('--max-jobs', type=int, default=None,
                        help='Maximum number of jobs to submit (for testing)')
