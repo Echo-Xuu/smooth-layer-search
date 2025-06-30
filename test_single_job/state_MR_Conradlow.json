@@ -49,7 +49,7 @@
         "pressure_boundary": [
             {
                 "id": 2,
-                "value": "-800 * (t/4)"
+                "value": "-1000 * (t/4)"
             }
         ]
     },

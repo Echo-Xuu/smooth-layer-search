@@ -1,7 +1,7 @@
 # Parameter grid for smooth_layer_thickness functional
 smooth_layer_thickness:
-  weight: [1e4, 3.16e4, 1e5, 3.16e5, 1e6]  # Different weight values
-  dhat: [0.01, 0.0575, 0.105, 0.1525, 0.2]     # Different dhat values
+  weight: [1e3, 3.16e3, 1e4, 3.16e4, 1e5]  # Different weight values
+  dhat: [0.001, 0.004, 0.016, 0.064, 0.256]     # Different dhat values
 
 # Base configuration paths (relative to project root)
 base_config:

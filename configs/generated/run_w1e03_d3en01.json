@@ -81,9 +81,9 @@
         2,
         3
       ],
-      "weight": 10000.0,
+      "weight": 1000.0,
       "state": 0,
-      "dhat": 0.064
+      "dhat": 0.256
     },
     {
       "type": "boundary_smoothing",
