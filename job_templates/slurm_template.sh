@@ -18,12 +18,17 @@ echo "Running on node: $(hostname)"
 # Create results directory
 mkdir -p results/{JOB_ID}
 
-# Load modules for Ginsburg (adjust based on what's available)
-# Check available modules with: module avail
+# Load modules for Ginsburg
+module load python37
+
+# Ensure user-installed Python packages are available
+export PATH=$HOME/.local/bin:$PATH
+export PYTHONPATH=$HOME/.local/lib/python3.7/site-packages:$PYTHONPATH
+
+# Load other modules as needed for your builds
 # module load gcc
 # module load cmake
 # module load eigen
-# Add other modules as needed for your builds
 
 # Set environment variables
 export OMP_NUM_THREADS={CPUS}
