@@ -1,0 +1,152 @@
+jobs:
+- config_file: run_w1e04_d1en02.json
+  job_id: w1e04_d1en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.01
+      weight: 1e4
+- config_file: run_w1e04_d6en02.json
+  job_id: w1e04_d6en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.0575
+      weight: 1e4
+- config_file: run_w1e04_d1en01.json
+  job_id: w1e04_d1en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.105
+      weight: 1e4
+- config_file: run_w1e04_d2en01.json
+  job_id: w1e04_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.1525
+      weight: 1e4
+- config_file: run_w1e04_d2en01.json
+  job_id: w1e04_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.2
+      weight: 1e4
+- config_file: run_w3e04_d1en02.json
+  job_id: w3e04_d1en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.01
+      weight: 3.16e4
+- config_file: run_w3e04_d6en02.json
+  job_id: w3e04_d6en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.0575
+      weight: 3.16e4
+- config_file: run_w3e04_d1en01.json
+  job_id: w3e04_d1en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.105
+      weight: 3.16e4
+- config_file: run_w3e04_d2en01.json
+  job_id: w3e04_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.1525
+      weight: 3.16e4
+- config_file: run_w3e04_d2en01.json
+  job_id: w3e04_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.2
+      weight: 3.16e4
+- config_file: run_w1e05_d1en02.json
+  job_id: w1e05_d1en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.01
+      weight: 1e5
+- config_file: run_w1e05_d6en02.json
+  job_id: w1e05_d6en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.0575
+      weight: 1e5
+- config_file: run_w1e05_d1en01.json
+  job_id: w1e05_d1en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.105
+      weight: 1e5
+- config_file: run_w1e05_d2en01.json
+  job_id: w1e05_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.1525
+      weight: 1e5
+- config_file: run_w1e05_d2en01.json
+  job_id: w1e05_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.2
+      weight: 1e5
+- config_file: run_w3e05_d1en02.json
+  job_id: w3e05_d1en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.01
+      weight: 3.16e5
+- config_file: run_w3e05_d6en02.json
+  job_id: w3e05_d6en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.0575
+      weight: 3.16e5
+- config_file: run_w3e05_d1en01.json
+  job_id: w3e05_d1en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.105
+      weight: 3.16e5
+- config_file: run_w3e05_d2en01.json
+  job_id: w3e05_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.1525
+      weight: 3.16e5
+- config_file: run_w3e05_d2en01.json
+  job_id: w3e05_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.2
+      weight: 3.16e5
+- config_file: run_w1e06_d1en02.json
+  job_id: w1e06_d1en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.01
+      weight: 1e6
+- config_file: run_w1e06_d6en02.json
+  job_id: w1e06_d6en02
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.0575
+      weight: 1e6
+- config_file: run_w1e06_d1en01.json
+  job_id: w1e06_d1en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.105
+      weight: 1e6
+- config_file: run_w1e06_d2en01.json
+  job_id: w1e06_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.1525
+      weight: 1e6
+- config_file: run_w1e06_d2en01.json
+  job_id: w1e06_d2en01
+  parameters:
+    smooth_layer_thickness:
+      dhat: 0.2
+      weight: 1e6
+total_jobs: 25

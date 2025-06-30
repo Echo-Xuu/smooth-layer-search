@@ -48,8 +48,9 @@ def update_config_with_params(base_config, params):
         if functional.get('type') == 'smooth_layer_thickness':
             if 'smooth_layer_thickness' in params:
                 slt_params = params['smooth_layer_thickness']
-                config['functionals'][i]['weight'] = slt_params['weight']
-                config['functionals'][i]['dhat'] = slt_params['dhat']
+                # Convert to float in case they're strings
+                config['functionals'][i]['weight'] = float(slt_params['weight'])
+                config['functionals'][i]['dhat'] = float(slt_params['dhat'])
             break
     
     return config
@@ -57,8 +58,15 @@ def update_config_with_params(base_config, params):
 def generate_job_id(params):
     """Generate unique job ID from parameters."""
     slt = params['smooth_layer_thickness']
-    weight_str = f"{slt['weight']:.0e}".replace('+', '').replace('-', 'n')
-    dhat_str = f"{slt['dhat']:.0e}".replace('+', '').replace('-', 'n')
+    
+    # Convert to float in case they're strings
+    weight_val = float(slt['weight'])
+    dhat_val = float(slt['dhat'])
+    
+    # Format as scientific notation and clean up
+    weight_str = f"{weight_val:.0e}".replace('+', '').replace('-', 'n')
+    dhat_str = f"{dhat_val:.0e}".replace('+', '').replace('-', 'n')
+    
     return f"w{weight_str}_d{dhat_str}"
 
 def main():
