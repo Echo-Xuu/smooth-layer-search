@@ -175,9 +175,9 @@ OPTIMIZATIONS = {
         "state_path": "state_MR_Conradlow.json",
         "run_path": "run_MR_Conradlow.json",
         "num_control_points": {
-            "0": [6, 12, 24, 48, 96, 192]
+            "0": [6, 12, 24, 48, 96]
         },
-        "num_iters": [10, 10, 10, 10, 10, 10],
+        "num_iters": [10, 10, 10, 10, 10],
         "aux_files": ["LORIP45V2_UTCX_out_only_scaled.obj", "LORIP45V2_CX.stl"],
         "opt_mesh_idx": 0,
         "remesh_reload_function": lambda fname: make_selections.make_selections(fname, "LORIP45V2_CX.stl"),

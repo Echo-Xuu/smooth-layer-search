@@ -70,7 +70,7 @@
     {
       "type": "collision_barrier",
       "print_energy": "collision_barrier",
-      "weight": 100000.0,
+      "weight": 1000.0,
       "state": 0,
       "dhat": 0.005
     },
@@ -93,7 +93,7 @@
       ],
       "power": 2,
       "state": 0,
-      "weight": 0.01,
+      "weight": 0.05,
       "scale_invariant": true
     }
   ],
