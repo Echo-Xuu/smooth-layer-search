@@ -73,8 +73,10 @@ def submit_job(job_script_path, dry_run=False):
         return True
     else:
         try:
+            # Python 3.6 compatible version
             result = subprocess.run(['sbatch', str(job_script_path)], 
-                                 capture_output=True, text=True, check=True)
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 universal_newlines=True, check=True)
             print(f"    Submitted: {result.stdout.strip()}")
             return True
         except subprocess.CalledProcessError as e:
@@ -95,8 +97,8 @@ def main():
                        help='Memory per job (default: 64G)')
     parser.add_argument('--cpus', default='16',
                        help='CPUs per job (default: 16)')
-    parser.add_argument('--walltime', default='06:00:00',
-                       help='Wall time per job (default: 6 hours)')
+    parser.add_argument('--walltime', default='04:00:00',
+                       help='Wall time per job (default: 4 hours)')
     parser.add_argument('--max-jobs', type=int, default=None,
                        help='Maximum number of jobs to submit (for testing)')
     parser.add_argument('--dry-run', action='store_true',
