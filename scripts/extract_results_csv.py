@@ -1,143 +1,137 @@
 #!/usr/bin/env python3
 """
-Extract optimization metrics from polyfem grid search results.
+Extract focused optimization metrics from polyfem log output.
 """
 
-import os
 import re
-import json
 import pandas as pd
 from pathlib import Path
 
-def extract_optimization_data(log_content):
-    """Extract optimization progression from log."""
-    progression = []
+def find_polyfem_logs(job_dir):
+    """Find polyfem log files in job directory."""
+    job_path = Path(job_dir)
     
-    # Patterns for key information
-    level_pattern = r'Starting multigrid level (\d+) with (\d+) control points'
-    iter_pattern = r'Iteration (\d+).*?objective[:\s]+([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)'
-    timing_pattern = r'Forward simulation.*?(\d+\.?\d*)\s*seconds'
+    # Look for different possible log file locations
+    possible_logs = [
+        job_path / "polyfem.log",
+        job_path / "optimization.log", 
+        job_path / "log",
+        *job_path.glob("slurm_*.out"),
+        *job_path.glob("*.log")
+    ]
+    
+    for log_file in possible_logs:
+        if log_file.exists() and log_file.stat().st_size > 0:
+            return log_file
+    
+    return None
+
+def extract_optimization_data(log_content):
+    """Extract control points, forward sim times, and objective progression."""
+    
+    # Patterns for extraction
+    patterns = {
+        'control_points': r'BBW: Computing initial weights for (\d+) handles',
+        'forward_sim_time': r'\[polyfem\].*?took\s+([-+]?[0-9]*\.?[0-9]+)s',
+        'lbfgs_iteration': r'\[L-BFGS\]\[Backtracking\].*?iter=(\d+).*?f=([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)',
+        'lbfgs_pre_iteration': r'\[L-BFGS\]\[Backtracking\].*?pre LS iter=(\d+).*?f=([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)',
+        'lbfgs_start': r'Starting L-BFGS with Backtracking solve f₀=([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)'
+    }
     
     lines = log_content.split('\n')
-    current_level = 0
-    current_control_points = 0
     
-    for i, line in enumerate(lines):
-        # Check for multigrid level
-        level_match = re.search(level_pattern, line, re.IGNORECASE)
-        if level_match:
-            current_level = int(level_match.group(1))
-            current_control_points = int(level_match.group(2))
+    # Extract highest control points
+    max_control_points = 0
+    for line in lines:
+        cp_match = re.search(patterns['control_points'], line)
+        if cp_match:
+            control_points = int(cp_match.group(1))
+            max_control_points = max(max_control_points, control_points)
+    
+    # Extract forward simulation times
+    forward_sim_times = []
+    for line in lines:
+        time_match = re.search(patterns['forward_sim_time'], line)
+        if time_match:
+            forward_sim_times.append(float(time_match.group(1)))
+    
+    # Extract objective progression from L-BFGS
+    objective_progression = []
+    
+    for line in lines:
+        # Check for initial objective
+        start_match = re.search(patterns['lbfgs_start'], line)
+        if start_match:
+            objective_progression.append({
+                'iteration': 0,
+                'objective_value': float(start_match.group(1))
+            })
             continue
         
-        # Check for iteration results
-        iter_match = re.search(iter_pattern, line, re.IGNORECASE)
+        # Check for iteration updates
+        iter_match = re.search(patterns['lbfgs_iteration'], line) or re.search(patterns['lbfgs_pre_iteration'], line)
         if iter_match:
-            iteration = int(iter_match.group(1))
-            objective = float(iter_match.group(2))
-            
-            # Look for timing in nearby lines
-            simulation_time = None
-            for search_line in lines[max(0, i-3):min(len(lines), i+5)]:
-                timing_match = re.search(timing_pattern, search_line)
-                if timing_match:
-                    simulation_time = float(timing_match.group(1))
-                    break
-            
-            progression.append({
-                'multigrid_level': current_level,
-                'control_points': current_control_points,
-                'iteration': iteration,
-                'objective_value': objective,
-                'forward_sim_time_seconds': simulation_time
+            objective_progression.append({
+                'iteration': int(iter_match.group(1)),
+                'objective_value': float(iter_match.group(2))
             })
     
-    return progression
-
-def get_job_parameters(job_dir):
-    """Extract weight and dhat from config file."""
-    config_file = job_dir / "run_MR_Conradlow.json"
-    if config_file.exists():
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-            
-            for functional in config.get('functionals', []):
-                if functional.get('type') == 'smooth_layer_thickness':
-                    return {
-                        'weight': functional.get('weight'),
-                        'dhat': functional.get('dhat')
-                    }
-        except:
-            pass
-    return {'weight': None, 'dhat': None}
+    return max_control_points, forward_sim_times, objective_progression
 
 def analyze_job(job_dir):
     """Analyze single job directory."""
     job_path = Path(job_dir)
     job_id = job_path.name
     
-    # Get parameters
-    params = get_job_parameters(job_path)
-    
-    # Check status
-    status_file = job_path / "status.txt"
-    status = "UNKNOWN"
-    if status_file.exists():
-        with open(status_file, 'r') as f:
-            status = f.read().strip()
-    
-    # Read log file
-    log_files = list(job_path.glob("slurm_*.out"))
-    if not log_files:
+    log_file = find_polyfem_logs(job_path)
+    if not log_file:
         return None, []
     
     try:
-        with open(log_files[0], 'r') as f:
+        with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
             log_content = f.read()
-    except:
+    except Exception:
         return None, []
     
-    # Extract progression
-    progression = extract_optimization_data(log_content)
+    max_control_points, forward_sim_times, objective_progression = extract_optimization_data(log_content)
     
-    if not progression:
+    if not objective_progression:
         return None, []
     
-    # Calculate summary
-    max_control_points = max(step['control_points'] for step in progression)
-    max_level = max(step['multigrid_level'] for step in progression)
-    total_iterations = len(progression)
-    final_objective = progression[-1]['objective_value']
-    
-    # Add job info to each step
-    for step in progression:
-        step['job_id'] = job_id
-        step.update(params)
+    # Create detailed progression data
+    progression_data = []
+    for i, obj_data in enumerate(objective_progression):
+        row = {
+            'job_id': job_id,
+            'max_control_points': max_control_points,
+            'iteration': obj_data['iteration'],
+            'objective_value': obj_data['objective_value'],
+            'forward_sim_time_seconds': forward_sim_times[i] if i < len(forward_sim_times) else None
+        }
+        progression_data.append(row)
     
     summary = {
         'job_id': job_id,
-        'status': status,
         'max_control_points': max_control_points,
-        'max_multigrid_level': max_level,
-        'total_iterations': total_iterations,
-        'final_objective_value': final_objective,
-        **params
+        'total_iterations': len(objective_progression),
+        'total_forward_sim_time': sum(forward_sim_times),
+        'final_objective_value': objective_progression[-1]['objective_value']
     }
     
-    return summary, progression
+    return summary, progression_data
 
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Extract polyfem optimization metrics')
+    parser = argparse.ArgumentParser(description='Extract focused polyfem optimization metrics')
     parser.add_argument('--results-dir', default='results', help='Results directory')
     parser.add_argument('--output-dir', default='analysis_output', help='Output directory')
     args = parser.parse_args()
     
-    project_root = Path(__file__).parent.parent
-    results_dir = project_root / args.results_dir
-    output_dir = project_root / args.output_dir
+    # Use current working directory as base
+    base_dir = Path.cwd()
+    results_dir = base_dir / args.results_dir
+    output_dir = base_dir / args.output_dir
     output_dir.mkdir(exist_ok=True)
     
     # Find job directories
@@ -154,27 +148,24 @@ def main():
         if summary:
             summary_results.append(summary)
             detailed_progression.extend(progression)
-            print(f"  {job_dir.name}: {summary['max_control_points']} control points, {summary['total_iterations']} iterations")
+            print(f"  {job_dir.name}: analyzed")
+        else:
+            print(f"  {job_dir.name}: no data found")
     
     # Save results
     if summary_results:
         summary_df = pd.DataFrame(summary_results)
-        summary_file = output_dir / "grid_search_summary.csv"
+        summary_file = output_dir / "optimization_summary.csv"
         summary_df.to_csv(summary_file, index=False)
         
         progression_df = pd.DataFrame(detailed_progression)
-        progression_file = output_dir / "optimization_progression.csv"
+        progression_file = output_dir / "objective_progression.csv"
         progression_df.to_csv(progression_file, index=False)
         
-        print(f"\nResults saved:")
-        print(f"  Summary: {summary_file}")
-        print(f"  Progression: {progression_file}")
-        print(f"  Jobs analyzed: {len(summary_results)}")
+        print(f"\nSaved {len(summary_results)} job summaries to: {summary_file}")
+        print(f"Saved {len(detailed_progression)} progression records to: {progression_file}")
     else:
-        print("No valid results found.")
+        print("No valid optimization data found.")
 
 if __name__ == "__main__":
     main()
-
-if __name__ == "__main__":
-    exit(main())
