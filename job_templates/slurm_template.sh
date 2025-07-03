@@ -7,6 +7,8 @@
 #SBATCH --cpus-per-task={CPUS}
 #SBATCH --mem={MEMORY}
 #SBATCH --account=myers
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=zx2410@columbia.edu
 
 # Job information
 echo "Job ID: {JOB_ID}"
