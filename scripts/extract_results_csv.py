@@ -128,10 +128,10 @@ def main():
     parser.add_argument('--output-dir', default='analysis_output', help='Output directory')
     args = parser.parse_args()
     
-    # Script is in scripts/ subdirectory, go up one level to project root
-    project_root = Path(__file__).parent.parent
-    results_dir = project_root / args.results_dir
-    output_dir = project_root / args.output_dir
+    # Use current working directory as base
+    base_dir = Path.cwd()
+    results_dir = base_dir / args.results_dir
+    output_dir = base_dir / args.output_dir
     output_dir.mkdir(exist_ok=True)
     
     # Find job directories
