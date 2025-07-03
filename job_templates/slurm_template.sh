@@ -27,10 +27,22 @@ module load cmake/3.27.3
 export PATH=$HOME/.local/bin:$PATH
 export PYTHONPATH=$HOME/.local/lib/python3.7/site-packages:$PYTHONPATH
 
-# Load other modules as needed for your builds
-# module load gcc
-# module load cmake
-# module load eigen
+# Add these debugging lines after the module loads and before the Python script:
+
+echo "=== DEBUGGING PYTHON ENVIRONMENT ==="
+echo "Python version: $(python --version)"
+echo "Python path: $(which python)"
+echo "PYTHONPATH: $PYTHONPATH"
+echo "PATH: $PATH"
+
+# Test the imports that are failing
+echo "Testing typing_extensions import:"
+python -c "import typing_extensions; print('typing_extensions: OK')" 2>&1
+
+echo "Testing meshio import:"
+python -c "import meshio; print('meshio: OK')" 2>&1
+
+echo "=== END DEBUGGING ==="
 
 # Set environment variables
 export OMP_NUM_THREADS={CPUS}
