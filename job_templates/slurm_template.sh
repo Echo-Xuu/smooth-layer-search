@@ -24,6 +24,8 @@ mkdir -p results/{JOB_ID}
 module load python37
 module load gcc/13.0.1
 module load cmake/3.27.3 
+module load singularity/3.7.1
+/burg/myers/users/zx2410/tetwild_singularity_wrapper/bin/TetWild --help
 
 # Ensure user-installed Python packages are available
 export PATH=$HOME/.local/bin:$PATH

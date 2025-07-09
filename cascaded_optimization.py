@@ -430,10 +430,14 @@ def do_tetwild_remesh(remesh_reload_function, ftetwild_build_dir, base_path):
     if ftetwild_build_dir is None or ftetwild_build_dir == "":
         raise AssertionError(
             "Must supply a valid fTetWild build directory for remeshing!")
+    
+    # Fix: Use correct binary name and path
+    tetwild_executable = os.path.join(ftetwild_build_dir, "bin", "TetWild")
+    
     subprocess.run([
-        os.path.join(ftetwild_build_dir, "FloatTetwild_bin"),
-        "-i", surf_mesh_fname,
-        "-o", mesh_fname
+        tetwild_executable,
+        "--input", surf_mesh_fname,
+        "--output", mesh_fname
     ], stdout=subprocess.DEVNULL)
     new_opt_vertex_count = remesh_reload_function(mesh_fname)
     return new_opt_vertex_count
