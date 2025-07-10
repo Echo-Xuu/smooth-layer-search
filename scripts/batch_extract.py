@@ -12,13 +12,13 @@ from pathlib import Path
 # Import the single extraction function
 # Try different possible names for the single extraction script
 try:
-    from extract_single_log import extract_optimization_data
+    from single_extract import extract_optimization_data
 except ImportError:
     try:
         from single_extract import extract_optimization_data
     except ImportError:
         try:
-            from extract_results_csv import extract_optimization_data
+            from single_extract import extract_optimization_data
         except ImportError:
             print("Error: Could not import extract_optimization_data function.")
             print("Make sure one of these files is in the same directory as this script:")
