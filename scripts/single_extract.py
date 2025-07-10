@@ -85,10 +85,11 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             if verbose:
                 print(f"Found control point level {current_level} with {current_control_points} control points")
         
-        # Check for L-BFGS start (only creates new level if no recent BBW)
+        # Check for L-BFGS start (only creates new level if we need a new full vertex level)
         elif re.search(lbfgs_start_pattern, line):
-            # Only create a new level if we need a new full vertex level
-            if needs_new_full_level or current_control_points is None:
+            # Only create a new level if we explicitly need a new full vertex level
+            # Don't create a level just because current_control_points is None
+            if needs_new_full_level:
                 # Process any remaining simulations from previous level
                 if pending_simulations and current_level is not None:
                     for i, sim in enumerate(pending_simulations):
@@ -105,6 +106,13 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 needs_new_full_level = False
                 if verbose:
                     print(f"Found full vertex level {current_level} (all vertices)")
+            elif current_control_points is None:
+                # Handle case where L-BFGS appears without prior BBW (first level)
+                current_level = level_counter
+                current_control_points = -1  # Full vertices
+                level_counter += 1
+                if verbose:
+                    print(f"Found initial full vertex level {current_level} (all vertices)")
             
             # Reset iteration tracking for optimization start
             current_iteration = 0  # We'll be working on iteration 0
