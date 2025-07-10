@@ -45,6 +45,11 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     lbfgs_start_pattern = r'\[adjoint-polyfem\] \[debug\] Starting L-BFGS'
     iteration_save_pattern = r'\[adjoint-polyfem\] \[info\] Saving iteration (\d+)'
     
+    # Level detection patterns
+    slim_warning_pattern = r'\[adjoint-polyfem\] \[warning\] Both in-line-search SLIM and after-line-search SLIM are ON!'
+    full_vertex_indicator = r'\[adjoint-polyfem\] \[trace\] Using a characteristic length of 1'
+    control_point_indicator = r'\[polyfem\] \[info\] Found 0 boundary loops, must be closed surface\.'
+    
     # Simulation tracking patterns
     simulation_step_pattern = r'\[polyfem\] \[info\] (\d+)/(\d+)\s+t=[\d.]+$'  # e.g., "1/16 t=0.25" or "16/16 t=4"
     simulation_time_pattern = r'\[polyfem\] \[info\]\s+took\s+([\d.]+)s'
@@ -60,8 +65,48 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     # Track current simulation state
     pending_simulation = None  # Current simulation being tracked
     
+    # Track level detection state
+    expecting_level_type = False  # True when we just saw SLIM warning and expect level type indicator
+    
     for line_idx, line in enumerate(lines):
         line = line.strip()
+        
+        # Check for SLIM warning (indicates start of level detection)
+        if re.search(slim_warning_pattern, line):
+            expecting_level_type = True
+            continue
+        
+        # Check for level type indicators (after SLIM warning)
+        if expecting_level_type:
+            if re.search(full_vertex_indicator, line):
+                # Process any remaining simulations from previous level
+                if pending_simulations and current_level is not None:
+                    for i, sim in enumerate(pending_simulations):
+                        sim['simulation_in_iteration'] = i
+                        if 'status' not in sim:
+                            sim['status'] = 'completed'
+                        simulation_data.append(sim)
+                    pending_simulations = []
+                
+                # Start new full vertex level
+                current_level = level_counter
+                current_control_points = 'full'  # Full vertices
+                current_iteration = None  # Will be set when L-BFGS starts
+                level_counter += 1
+                expecting_level_type = False
+                if verbose:
+                    print(f"Found full vertex level {current_level} (all vertices)")
+                continue
+                
+            elif re.search(control_point_indicator, line):
+                # Control point level - BBW pattern will follow shortly
+                expecting_level_type = False
+                if verbose:
+                    print("Detected control point level start")
+                continue
+            else:
+                # Neither pattern found, keep looking
+                continue
         
         # Check for BBW handles computation (new control point level)
         bbw_match = re.search(bbw_handles_pattern, line)
@@ -89,7 +134,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             # Start optimization at current level
             current_iteration = 0  # We'll be working on iteration 0
             if verbose:
-                print(f"Starting optimization at level {current_level} ({current_control_points} control points)")
+                cp_str = f"{current_control_points} control points" if current_control_points != 'full' else "full vertices"
+                print(f"Starting optimization at level {current_level} ({cp_str})")
         
         # Check for simulation step progress (both start and completion)
         step_match = re.search(simulation_step_pattern, line)
@@ -116,7 +162,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     }
                     pending_simulations.append(sim_record)
                     if verbose:
-                        print(f"Found incomplete simulation at level {pending_simulation['level']} ({pending_simulation['control_points']} control points)")
+                        print(f"Found incomplete simulation at level {pending_simulation['level']} ({pending_simulation['control_points']} control points)" if pending_simulation['control_points'] != 'full' else f"Found incomplete simulation at level {pending_simulation['level']} (full vertices)")
                 
                 # Start tracking new simulation
                 pending_simulation = {
@@ -140,7 +186,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     level = pending_simulation['level']
                     control_points = pending_simulation['control_points']
                     iter_str = f"iteration {current_iteration}" if current_iteration is not None else "pre-optimization"
-                    print(f"Found completed simulation: {sim_time}s at level {level} ({control_points} control points) for {iter_str}")
+                    cp_str = f"{control_points} control points" if control_points != 'full' else "full vertices"
+                    print(f"Found completed simulation: {sim_time}s at level {level} ({cp_str}) for {iter_str}")
                 
                 # Create simulation record
                 sim_record = {
@@ -230,7 +277,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         if verbose:
             level = pending_simulation['level']
             control_points = pending_simulation['control_points']
-            print(f"Found incomplete simulation at end of log: level {level} ({control_points} control points)")
+            cp_str = f"{control_points} control points" if control_points != 'full' else "full vertices"
+            print(f"Found incomplete simulation at end of log: level {level} ({cp_str})")
     
     # Write to CSV
     if simulation_data:
@@ -257,6 +305,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         if verbose:
             unique_levels = set([row['level'] for row in simulation_data])
             unique_control_points = set([row['control_points'] for row in simulation_data])
+            numeric_control_points = sorted([int(cp) for cp in unique_control_points if cp != 'full'])
+            has_full = 'full' in unique_control_points
             total_levels = len(unique_levels)
             total_simulations = len(simulation_data)
             completed_simulations = len([row for row in simulation_data if row.get('status') == 'completed'])
@@ -264,7 +314,16 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             
             print(f"\nExtracted data saved to {output_csv_path}")
             print(f"Total optimization levels: {total_levels}")
-            print(f"Control point configurations: {sorted([int(cp) for cp in unique_control_points])}")
+            
+            # Build control point configurations string
+            config_parts = []
+            if numeric_control_points:
+                config_parts.append(f"{numeric_control_points} control points")
+            if has_full:
+                config_parts.append("full vertices")
+            config_str = " + ".join(config_parts)
+            print(f"Control point configurations: {config_str}")
+            
             print(f"Total forward simulations: {total_simulations}")
             print(f"Completed simulations: {completed_simulations}")
             if incomplete_simulations > 0:
@@ -308,7 +367,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 if incomplete_at_level > 0:
                     status_str = f" ({incomplete_at_level} incomplete)"
                 
-                print(f"Level {level} ({cp} control points):")
+                print(f"Level {level} ({cp} control points):" if cp != 'full' else f"Level {level} (full vertices):")
                 print(f"  Total simulations: {total_sims_in_level}{status_str}")
                 print(f"  Saved iterations: {len(saved_iterations)}")
                 if level in highest_iterations:
@@ -348,7 +407,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     if row['simulation_time'] is not None:
                         iteration_costs[iter_key]['total_time'] += row['simulation_time']
                 
-                print(f"Level {level} ({cp} control points):")
+                print(f"Level {level} ({cp} control points):" if cp != 'full' else f"Level {level} (full vertices):")
                 for iteration in sorted(iteration_costs.keys(), key=lambda x: -1 if x == 'pre_opt' else (float('inf') if not isinstance(x, int) else x)):
                     if iteration != 'pre_opt' and isinstance(iteration, int):
                         count = iteration_costs[iteration]['count']
