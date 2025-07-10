@@ -47,7 +47,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     iteration_save_pattern = r'\[adjoint-polyfem\] \[info\] Saving iteration (\d+)'
     
     # Simulation tracking patterns
-    simulation_step_pattern = r'\[polyfem\] \[info\] (\d+)/(\d+)\s+t=[\d.]+
+    simulation_step_pattern = r'\[polyfem\] \[info\] (\d+)/(\d+)\s+t=[\d.]+'
     
     target_match_pattern = r'\[adjoint-polyfem\] \[debug\] \[target_match\] ([\d.]+)'
     collision_barrier_pattern = r'\[adjoint-polyfem\] \[debug\] \[collision_barrier\] ([\d.]+)'
