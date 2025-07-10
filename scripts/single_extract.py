@@ -55,12 +55,11 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     smooth_layer_pattern = r'\[adjoint-polyfem\] \[debug\] \[smooth_layer_thickness\] ([\d.]+)'
     boundary_smoothing_pattern = r'\[adjoint-polyfem\] \[debug\] \[boundary_smoothing\] ([\d.]+)'
     
-    # Track simulations within current iteration
-    simulations_in_current_iteration = []
+    # Track simulations accumulating toward current iteration
+    pending_simulations = []  # Simulations completed but not yet assigned to a saved iteration
     
-    # Track simulation state
-    pending_simulation = None  # Will store simulation info when it starts
-    current_simulation_started = False  # Track if a simulation is in progress
+    # Track current simulation state
+    pending_simulation = None  # Current simulation being tracked
     
     for line_idx, line in enumerate(lines):
         line = line.strip()
@@ -69,18 +68,19 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         bbw_match = re.search(bbw_handles_pattern, line)
         if bbw_match:
             # Process any remaining simulations from previous level
-            if simulations_in_current_iteration and current_level is not None:
-                for i, sim in enumerate(simulations_in_current_iteration):
+            if pending_simulations and current_level is not None:
+                # These simulations belong to the last iteration of the previous level
+                for i, sim in enumerate(pending_simulations):
                     sim['simulation_in_iteration'] = i
                     if 'status' not in sim:
-                        sim['status'] = 'completed'  # Default status
+                        sim['status'] = 'completed'
                     simulation_data.append(sim)
+                pending_simulations = []
             
             # Start new control point level
             current_level = level_counter
             current_control_points = int(bbw_match.group(1))
-            current_iteration = None
-            simulations_in_current_iteration = []
+            current_iteration = None  # Will be set when L-BFGS starts
             level_counter += 1
             if verbose:
                 print(f"Found control point level {current_level} with {current_control_points} control points")
@@ -90,18 +90,17 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             # Only create a new level if we need a new full vertex level
             if needs_new_full_level or current_control_points is None:
                 # Process any remaining simulations from previous level
-                if simulations_in_current_iteration and current_level is not None:
-                    for i, sim in enumerate(simulations_in_current_iteration):
+                if pending_simulations and current_level is not None:
+                    for i, sim in enumerate(pending_simulations):
                         sim['simulation_in_iteration'] = i
                         if 'status' not in sim:
-                            sim['status'] = 'completed'  # Default status
+                            sim['status'] = 'completed'
                         simulation_data.append(sim)
+                    pending_simulations = []
                 
                 # Start new full vertex level
                 current_level = level_counter
                 current_control_points = -1  # Full vertices
-                current_iteration = None
-                simulations_in_current_iteration = []
                 level_counter += 1
                 needs_new_full_level = False
                 if verbose:
@@ -120,12 +119,12 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             if current_step == 1:
                 # Handle any previous incomplete simulation
                 if pending_simulation is not None and not pending_simulation.get('completed', False):
-                    # Previous simulation was incomplete - record it
+                    # Previous simulation was incomplete - add to pending simulations
                     sim_record = {
                         'level': pending_simulation['level'],
                         'control_points': pending_simulation['control_points'] if pending_simulation['control_points'] != -1 else 'full',
-                        'iteration': pending_simulation['iteration'],
-                        'simulation_in_iteration': pending_simulation['simulation_in_iteration'],
+                        'iteration': current_iteration if current_iteration is not None else 'pre_opt',
+                        'simulation_in_iteration': -1,  # Will be set when iteration is saved
                         'simulation_time': None,  # Incomplete simulation
                         'status': 'incomplete',
                         'target_match': None,
@@ -133,7 +132,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                         'smooth_layer_thickness': None,
                         'boundary_smoothing': None
                     }
-                    simulations_in_current_iteration.append(sim_record)
+                    pending_simulations.append(sim_record)
                     if verbose:
                         level = pending_simulation['level']
                         control_points = pending_simulation['control_points']
@@ -145,11 +144,9 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     'level': current_level,
                     'control_points': current_control_points,
                     'iteration': current_iteration if current_iteration is not None else 'pre_opt',
-                    'simulation_in_iteration': len(simulations_in_current_iteration),
                     'completed': False,
                     'total_steps': total_steps
                 }
-                current_simulation_started = True
             
             # If this is the last step of a simulation (completion)
             elif current_step == total_steps and pending_simulation is not None:
@@ -164,14 +161,15 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     level = pending_simulation['level']
                     control_points = pending_simulation['control_points']
                     cp_str = f"{control_points} control points" if control_points != -1 else "full vertices"
-                    print(f"Found completed simulation time: {sim_time}s at level {level} ({cp_str})")
+                    iter_str = f"iteration {current_iteration}" if current_iteration is not None else "pre-optimization"
+                    print(f"Found completed simulation: {sim_time}s at level {level} ({cp_str}) for {iter_str}")
                 
-                # Create simulation record using the captured level info
+                # Create simulation record
                 sim_record = {
                     'level': pending_simulation['level'],
                     'control_points': pending_simulation['control_points'] if pending_simulation['control_points'] != -1 else 'full',
                     'iteration': pending_simulation['iteration'],
-                    'simulation_in_iteration': pending_simulation['simulation_in_iteration'],
+                    'simulation_in_iteration': -1,  # Will be set when iteration is saved
                     'simulation_time': sim_time,
                     'status': 'completed',
                     'target_match': None,
@@ -180,15 +178,15 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     'boundary_smoothing': None
                 }
                 
-                simulations_in_current_iteration.append(sim_record)
+                # Add to pending simulations (not final data yet)
+                pending_simulations.append(sim_record)
                 
                 # Clear pending simulation
                 pending_simulation = None
-                current_simulation_started = False
         
-        # Extract objective values and apply to the last simulation
-        if simulations_in_current_iteration:
-            last_sim = simulations_in_current_iteration[-1]
+        # Extract objective values and apply to the last pending simulation
+        if pending_simulations:
+            last_sim = pending_simulations[-1]
             
             target_match = re.search(target_match_pattern, line)
             if target_match:
@@ -211,26 +209,33 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         if iteration_match:
             saved_iteration = int(iteration_match.group(1))
             
-            # Add all simulations from current iteration to main data
-            for i, sim in enumerate(simulations_in_current_iteration):
+            if verbose:
+                print(f"Iteration {saved_iteration} saved with {len(pending_simulations)} simulations")
+            
+            # Move all pending simulations to final data with correct iteration info
+            for i, sim in enumerate(pending_simulations):
+                sim['iteration'] = saved_iteration
                 sim['simulation_in_iteration'] = i
                 if 'status' not in sim:
-                    sim['status'] = 'completed'  # Default status
+                    sim['status'] = 'completed'
                 simulation_data.append(sim)
             
-            # Reset for next iteration
+            # Clear pending simulations and set up for next iteration
+            pending_simulations = []
             current_iteration = saved_iteration + 1  # Next iteration to work on
-            simulations_in_current_iteration = []
+            
             # Mark that we need a new full vertex level after control point level
             if current_control_points != -1:
                 needs_new_full_level = True
     
-    # Process any remaining simulations
-    if simulations_in_current_iteration and current_level is not None:
-        for i, sim in enumerate(simulations_in_current_iteration):
+    # Handle any remaining pending simulations at end of log
+    if pending_simulations:
+        if verbose:
+            print(f"Found {len(pending_simulations)} pending simulations at end of log")
+        for i, sim in enumerate(pending_simulations):
             sim['simulation_in_iteration'] = i
             if 'status' not in sim:
-                sim['status'] = 'completed'  # Default status
+                sim['status'] = 'completed'
             simulation_data.append(sim)
     
     # Handle any final incomplete simulation
@@ -238,8 +243,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         sim_record = {
             'level': pending_simulation['level'],
             'control_points': pending_simulation['control_points'] if pending_simulation['control_points'] != -1 else 'full',
-            'iteration': pending_simulation['iteration'],
-            'simulation_in_iteration': len(simulations_in_current_iteration),
+            'iteration': current_iteration if current_iteration is not None else 'pre_opt',
+            'simulation_in_iteration': len(pending_simulations),
             'simulation_time': None,
             'status': 'incomplete',
             'target_match': None,
@@ -265,7 +270,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 # Write header
                 writer.writeheader()
                 
-                # Write data - ensure all records have a status field
+                # Write data
                 for row in simulation_data:
                     if 'status' not in row:
                         row['status'] = 'completed'  # Default for existing records
@@ -297,7 +302,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             for row in simulation_data:
                 level = row['level']
                 iteration = row['iteration']
-                if iteration != 'pre_opt':
+                if iteration != 'pre_opt' and isinstance(iteration, int):
                     if level not in highest_iterations or iteration > highest_iterations[level]:
                         highest_iterations[level] = iteration
             
@@ -319,7 +324,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 cp = level_stats[level]['control_points']
                 iterations = level_stats[level]['iterations']
                 total_sims_in_level = sum(iterations.values())
-                total_iterations = len([k for k in iterations.keys() if k != 'pre_opt'])
+                saved_iterations = [k for k in iterations.keys() if k != 'pre_opt' and isinstance(k, int)]
                 
                 # Count completed vs incomplete simulations at this level
                 level_data = [row for row in simulation_data if row['level'] == level]
@@ -333,11 +338,12 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 
                 print(f"Level {level} ({cp_str}):")
                 print(f"  Total simulations: {total_sims_in_level}{status_str}")
-                print(f"  Total iterations: {total_iterations}")
+                print(f"  Saved iterations: {len(saved_iterations)}")
                 if level in highest_iterations:
                     print(f"  Highest iteration reached: {highest_iterations[level]}")
                 
-                for iteration in sorted(iterations.keys(), key=lambda x: -1 if x == 'pre_opt' else x):
+                # Show simulations per iteration
+                for iteration in sorted(iterations.keys(), key=lambda x: -1 if x == 'pre_opt' else (float('inf') if not isinstance(x, int) else x)):
                     count = iterations[iteration]
                     level_iter_data = [row for row in level_data if row['iteration'] == iteration]
                     completed_iter = len([row for row in level_iter_data if row.get('status') == 'completed'])
@@ -372,8 +378,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                 
                 cp_str = f"{cp} control points" if cp != 'full' else "full vertices"
                 print(f"Level {level} ({cp_str}):")
-                for iteration in sorted(iteration_costs.keys(), key=lambda x: -1 if x == 'pre_opt' else x):
-                    if iteration != 'pre_opt':
+                for iteration in sorted(iteration_costs.keys(), key=lambda x: -1 if x == 'pre_opt' else (float('inf') if not isinstance(x, int) else x)):
+                    if iteration != 'pre_opt' and isinstance(iteration, int):
                         count = iteration_costs[iteration]['count']
                         total_time = iteration_costs[iteration]['total_time']
                         avg_time = total_time / count if count > 0 else 0
