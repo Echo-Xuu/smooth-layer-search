@@ -63,7 +63,7 @@
                 "surface_selection": [
                     3
                 ],
-                "mesh_path": "LORIP45V2_UTCX_out_only_scaled.obj",
+                "mesh_path": "LORIP45V3_UTCX_out_scaled.obj",
                 "delta": 0.01
             }
         },
