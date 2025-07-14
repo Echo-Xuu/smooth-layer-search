@@ -17,29 +17,52 @@ def make_selections(volumetric_mesh_fname, CX_fname):
     # At the cervix, find: min y and x at min y (x lower bound), max x (x upper bound) and y at max x
     mesh_ori_CX = meshio.read(CX_fname)
     pts_ori_CX = mesh_ori_CX.points   # shape (N,3)
-    idx_max_x_ori_CX = np.argmax(pts_ori_CX[:, 0])
-    idx_min_y_ori_CX = np.argmin(pts_ori_CX[:, 1])
-    idx_max_y_ori_CX = np.argmax(pts_ori_CX[:, 1])
-    p1_ori_CX = pts_ori_CX[idx_max_x_ori_CX]  # [x_max, y_at_xmax, z_at_xmax]
-    p2_ori_CX = pts_ori_CX[idx_min_y_ori_CX]  # [x_at_ymin, y_min, z_at_ymin]
-    p3_ori_CX = pts_ori_CX[idx_max_y_ori_CX]
-    min_y = p2_ori_CX[1]
-    x_at_min_y = p2_ori_CX[0]
-    max_x = p1_ori_CX[0]
-    y_at_max_x = p1_ori_CX[1]
-    #print(min_y, x_at_min_y, max_x, y_at_max_x)
-    x_at_max_y = p3_ori_CX[0]
-    x_range = max_x - x_at_max_y
-    lower_x = x_at_max_y + (x_range / 2.0)
-    #lower_x = round(x_at_min_y - 0.5, 1)
-    upper_x = math.ceil(max_x)
-    #print(lower_x, upper_x)
-    slope = (max_x - x_at_min_y) / (y_at_max_x - min_y)
-    #print(slope)
-    dirichlet_selection = (triangle_barycenters[:, 0] >= lower_x) & \
-                      (triangle_barycenters[:, 0] <= upper_x) & \
-                      ((triangle_barycenters[:, 0] - x_at_min_y) / (triangle_barycenters[:, 1] - min_y) >= slope)
-    # print(dirichlet_selection)
+
+    # Since CX is at the positive end of x, find its x-range
+    cx_x_min = np.min(pts_ori_CX[:, 0])
+    cx_x_max = np.max(pts_ori_CX[:, 0])
+
+    #print(f"CX mesh x-range: {cx_x_min:.3f} to {cx_x_max:.3f}")
+
+    # Exclude the CX portion from volumetric mesh
+    # Keep only points with x < cx_x_min (before the CX starts)
+    volumetric_without_cx_mask = v[:, 0] < cx_x_min
+    volumetric_without_cx = v[volumetric_without_cx_mask]
+
+    if len(volumetric_without_cx) > 0:
+        # Extract x coordinates excluding CX portion
+        x_coords_without_cx = volumetric_without_cx[:, 0]
+        
+        # Find the range of x coordinates (excluding CX portion)
+        x_min_without_cx = np.min(x_coords_without_cx)
+        x_max_without_cx = np.max(x_coords_without_cx)
+        x_range_without_cx = x_max_without_cx - x_min_without_cx
+        
+        # Find the 95th percentile (top 5%) of x coordinates
+        x_95th_percentile = np.percentile(x_coords_without_cx, 90)
+        
+        #print(f"\nVolumetric mesh excluding CX:")
+        #print(f"  Points excluded: {len(v) - len(volumetric_without_cx)} out of {len(v)}")
+        #print(f"  X range (without CX): {x_min_without_cx:.3f} to {x_max_without_cx:.3f}")
+        #print(f"  X range span: {x_range_without_cx:.3f}")
+        #print(f"  95th percentile of x coordinates: {x_95th_percentile:.3f}")
+        
+        # Store results for further use
+        x_range = (x_min_without_cx, x_max_without_cx)
+        top_5_percent_x = x_95th_percentile
+    
+    else:
+        #print("Warning: No points remain after excluding CX portion")
+        x_range = None
+        top_5_percent_x = None
+
+        # For comparison, show the full volumetric mesh stats
+        all_x_coords = v[:, 0]
+        #print(f"\nFull volumetric mesh (including CX):")
+        #print(f"  X range: {np.min(all_x_coords):.3f} to {np.max(all_x_coords):.3f}")
+        #print(f"  95th percentile: {np.percentile(all_x_coords, 95):.3f}")
+
+    dirichlet_selection = (triangle_barycenters[:, 0] >= top_5_percent_x)
     with open("multigrid_selection.txt", "w") as file_:
         # Select inner surface and label as 2
         for i, j, k in f[c == 1]:
