@@ -19,7 +19,7 @@
   },
   "solver": {
     "linear": {
-      "solver": "Eigen::AccelerateLDLT"
+      "solver": "Eigen::PardisoLDLT"
     },
     "nonlinear": {
       "line_search": {

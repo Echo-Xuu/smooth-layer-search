@@ -13,7 +13,8 @@
 # Job information
 echo "Job ID: {JOB_ID}"
 echo "SLURM Job ID: $SLURM_JOB_ID"
-echo "Config file: {CONFIG_FILE}"
+echo "Run config file: {RUN_CONFIG_FILE}"
+echo "State config file: {STATE_CONFIG_FILE}"
 echo "Started at: $(date)"
 echo "Running on node: $(hostname)"
 
@@ -57,19 +58,32 @@ export FTETWILD_BUILD_DIR={FTETWILD_BUILD_DIR}
 # Change to job directory
 cd results/{JOB_ID}
 
-# Copy necessary files
-cp ../../configs/generated/{CONFIG_FILE} ./run_MR_Conradlow.json
-cp ../../cervix_inflation_EX_V2_original/state_MR_Conradlow.json ./
-cp ../../cervix_inflation_EX_V2_original/*.obj ./
-cp ../../cervix_inflation_EX_V2_original/*.stl ./
-cp ../../cervix_inflation_EX_V2_original/*.msh ./
-cp ../../cervix_inflation_EX_V2_original/*.txt ./
-cp ../../cervix_inflation_EX_V2_original/*.py ./ 2>/dev/null || true
+# Config files are already copied by the submit script
+# Just verify they exist
+if [ ! -f "run_MR_Conradlow.json" ]; then
+    echo "ERROR: run_MR_Conradlow.json not found in job directory"
+    exit 1
+fi
+
+if [ ! -f "state_MR_Conradlow.json" ]; then
+    echo "ERROR: state_MR_Conradlow.json not found in job directory"
+    exit 1
+fi
+
+echo "Config files verified:"
+echo "  Run config: run_MR_Conradlow.json"
+echo "  State config: state_MR_Conradlow.json"
+
+# Log the parameter values for this job
+echo "=== JOB PARAMETERS ==="
+echo "Internal target match weight: {ITM_WEIGHT}"
+echo "Pressure boundary magnitude: {PB_PRESSURE}"
+echo "=========================="
 
 # Run the simulation
 echo "Starting polyfem simulation..."
-python ../../cascaded_optimization.py \
-    --opt_example cervix_inflation_EX_V2_original \
+python ../../cascaded_optimization_dual.py \
+    --opt_example cervix_inflation_EX_V2_original_dual_deformed_fine \
     --polyfem_build_dir $POLYFEM_BUILD_DIR \
     --mmg_build_dir $MMG_BUILD_DIR \
     --ftetwild_build_dir $FTETWILD_BUILD_DIR \
