@@ -1,152 +1,219 @@
 jobs:
-- config_file: run_w1e03_d1en03.json
-  job_id: w1e03_d1en03
+- job_id: itm_w1e04_pb_p600
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.001
-      weight: 1e3
-- config_file: run_w1e03_d4en03.json
-  job_id: w1e03_d4en03
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.004
-      weight: 1e3
-- config_file: run_w1e03_d2en02.json
-  job_id: w1e03_d2en02
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.016
-      weight: 1e3
-- config_file: run_w1e03_d6en02.json
-  job_id: w1e03_d6en02
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.064
-      weight: 1e3
-- config_file: run_w1e03_d3en01.json
-  job_id: w1e03_d3en01
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.256
-      weight: 1e3
-- config_file: run_w3e03_d1en03.json
-  job_id: w3e03_d1en03
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.001
-      weight: 3.16e3
-- config_file: run_w3e03_d4en03.json
-  job_id: w3e03_d4en03
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.004
-      weight: 3.16e3
-- config_file: run_w3e03_d2en02.json
-  job_id: w3e03_d2en02
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.016
-      weight: 3.16e3
-- config_file: run_w3e03_d6en02.json
-  job_id: w3e03_d6en02
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.064
-      weight: 3.16e3
-- config_file: run_w3e03_d3en01.json
-  job_id: w3e03_d3en01
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.256
-      weight: 3.16e3
-- config_file: run_w1e04_d1en03.json
-  job_id: w1e04_d1en03
-  parameters:
-    smooth_layer_thickness:
-      dhat: 0.001
+    internal_target_match:
       weight: 1e4
-- config_file: run_w1e04_d4en03.json
-  job_id: w1e04_d4en03
+    pressure_boundary:
+      pressure_magnitude: 600
+  run_config_file: run_itm_w1e04_pb_p600.json
+  state_config_file: state_itm_w1e04_pb_p600.json
+- job_id: itm_w1e04_pb_p800
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.004
+    internal_target_match:
       weight: 1e4
-- config_file: run_w1e04_d2en02.json
-  job_id: w1e04_d2en02
+    pressure_boundary:
+      pressure_magnitude: 800
+  run_config_file: run_itm_w1e04_pb_p800.json
+  state_config_file: state_itm_w1e04_pb_p800.json
+- job_id: itm_w1e04_pb_p1000
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.016
+    internal_target_match:
       weight: 1e4
-- config_file: run_w1e04_d6en02.json
-  job_id: w1e04_d6en02
+    pressure_boundary:
+      pressure_magnitude: 1000
+  run_config_file: run_itm_w1e04_pb_p1000.json
+  state_config_file: state_itm_w1e04_pb_p1000.json
+- job_id: itm_w1e04_pb_p1200
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.064
+    internal_target_match:
       weight: 1e4
-- config_file: run_w1e04_d3en01.json
-  job_id: w1e04_d3en01
+    pressure_boundary:
+      pressure_magnitude: 1200
+  run_config_file: run_itm_w1e04_pb_p1200.json
+  state_config_file: state_itm_w1e04_pb_p1200.json
+- job_id: itm_w1e04_pb_p1500
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.256
+    internal_target_match:
       weight: 1e4
-- config_file: run_w3e04_d1en03.json
-  job_id: w3e04_d1en03
+    pressure_boundary:
+      pressure_magnitude: 1500
+  run_config_file: run_itm_w1e04_pb_p1500.json
+  state_config_file: state_itm_w1e04_pb_p1500.json
+- job_id: itm_w5e04_pb_p600
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.001
-      weight: 3.16e4
-- config_file: run_w3e04_d4en03.json
-  job_id: w3e04_d4en03
+    internal_target_match:
+      weight: 5e4
+    pressure_boundary:
+      pressure_magnitude: 600
+  run_config_file: run_itm_w5e04_pb_p600.json
+  state_config_file: state_itm_w5e04_pb_p600.json
+- job_id: itm_w5e04_pb_p800
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.004
-      weight: 3.16e4
-- config_file: run_w3e04_d2en02.json
-  job_id: w3e04_d2en02
+    internal_target_match:
+      weight: 5e4
+    pressure_boundary:
+      pressure_magnitude: 800
+  run_config_file: run_itm_w5e04_pb_p800.json
+  state_config_file: state_itm_w5e04_pb_p800.json
+- job_id: itm_w5e04_pb_p1000
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.016
-      weight: 3.16e4
-- config_file: run_w3e04_d6en02.json
-  job_id: w3e04_d6en02
+    internal_target_match:
+      weight: 5e4
+    pressure_boundary:
+      pressure_magnitude: 1000
+  run_config_file: run_itm_w5e04_pb_p1000.json
+  state_config_file: state_itm_w5e04_pb_p1000.json
+- job_id: itm_w5e04_pb_p1200
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.064
-      weight: 3.16e4
-- config_file: run_w3e04_d3en01.json
-  job_id: w3e04_d3en01
+    internal_target_match:
+      weight: 5e4
+    pressure_boundary:
+      pressure_magnitude: 1200
+  run_config_file: run_itm_w5e04_pb_p1200.json
+  state_config_file: state_itm_w5e04_pb_p1200.json
+- job_id: itm_w5e04_pb_p1500
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.256
-      weight: 3.16e4
-- config_file: run_w1e05_d1en03.json
-  job_id: w1e05_d1en03
+    internal_target_match:
+      weight: 5e4
+    pressure_boundary:
+      pressure_magnitude: 1500
+  run_config_file: run_itm_w5e04_pb_p1500.json
+  state_config_file: state_itm_w5e04_pb_p1500.json
+- job_id: itm_w5e05_pb_p600
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.001
-      weight: 1e5
-- config_file: run_w1e05_d4en03.json
-  job_id: w1e05_d4en03
+    internal_target_match:
+      weight: 5e5
+    pressure_boundary:
+      pressure_magnitude: 600
+  run_config_file: run_itm_w5e05_pb_p600.json
+  state_config_file: state_itm_w5e05_pb_p600.json
+- job_id: itm_w5e05_pb_p800
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.004
-      weight: 1e5
-- config_file: run_w1e05_d2en02.json
-  job_id: w1e05_d2en02
+    internal_target_match:
+      weight: 5e5
+    pressure_boundary:
+      pressure_magnitude: 800
+  run_config_file: run_itm_w5e05_pb_p800.json
+  state_config_file: state_itm_w5e05_pb_p800.json
+- job_id: itm_w5e05_pb_p1000
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.016
-      weight: 1e5
-- config_file: run_w1e05_d6en02.json
-  job_id: w1e05_d6en02
+    internal_target_match:
+      weight: 5e5
+    pressure_boundary:
+      pressure_magnitude: 1000
+  run_config_file: run_itm_w5e05_pb_p1000.json
+  state_config_file: state_itm_w5e05_pb_p1000.json
+- job_id: itm_w5e05_pb_p1200
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.064
-      weight: 1e5
-- config_file: run_w1e05_d3en01.json
-  job_id: w1e05_d3en01
+    internal_target_match:
+      weight: 5e5
+    pressure_boundary:
+      pressure_magnitude: 1200
+  run_config_file: run_itm_w5e05_pb_p1200.json
+  state_config_file: state_itm_w5e05_pb_p1200.json
+- job_id: itm_w5e05_pb_p1500
   parameters:
-    smooth_layer_thickness:
-      dhat: 0.256
-      weight: 1e5
+    internal_target_match:
+      weight: 5e5
+    pressure_boundary:
+      pressure_magnitude: 1500
+  run_config_file: run_itm_w5e05_pb_p1500.json
+  state_config_file: state_itm_w5e05_pb_p1500.json
+- job_id: itm_w1e06_pb_p600
+  parameters:
+    internal_target_match:
+      weight: 1e6
+    pressure_boundary:
+      pressure_magnitude: 600
+  run_config_file: run_itm_w1e06_pb_p600.json
+  state_config_file: state_itm_w1e06_pb_p600.json
+- job_id: itm_w1e06_pb_p800
+  parameters:
+    internal_target_match:
+      weight: 1e6
+    pressure_boundary:
+      pressure_magnitude: 800
+  run_config_file: run_itm_w1e06_pb_p800.json
+  state_config_file: state_itm_w1e06_pb_p800.json
+- job_id: itm_w1e06_pb_p1000
+  parameters:
+    internal_target_match:
+      weight: 1e6
+    pressure_boundary:
+      pressure_magnitude: 1000
+  run_config_file: run_itm_w1e06_pb_p1000.json
+  state_config_file: state_itm_w1e06_pb_p1000.json
+- job_id: itm_w1e06_pb_p1200
+  parameters:
+    internal_target_match:
+      weight: 1e6
+    pressure_boundary:
+      pressure_magnitude: 1200
+  run_config_file: run_itm_w1e06_pb_p1200.json
+  state_config_file: state_itm_w1e06_pb_p1200.json
+- job_id: itm_w1e06_pb_p1500
+  parameters:
+    internal_target_match:
+      weight: 1e6
+    pressure_boundary:
+      pressure_magnitude: 1500
+  run_config_file: run_itm_w1e06_pb_p1500.json
+  state_config_file: state_itm_w1e06_pb_p1500.json
+- job_id: itm_w5e06_pb_p600
+  parameters:
+    internal_target_match:
+      weight: 5e6
+    pressure_boundary:
+      pressure_magnitude: 600
+  run_config_file: run_itm_w5e06_pb_p600.json
+  state_config_file: state_itm_w5e06_pb_p600.json
+- job_id: itm_w5e06_pb_p800
+  parameters:
+    internal_target_match:
+      weight: 5e6
+    pressure_boundary:
+      pressure_magnitude: 800
+  run_config_file: run_itm_w5e06_pb_p800.json
+  state_config_file: state_itm_w5e06_pb_p800.json
+- job_id: itm_w5e06_pb_p1000
+  parameters:
+    internal_target_match:
+      weight: 5e6
+    pressure_boundary:
+      pressure_magnitude: 1000
+  run_config_file: run_itm_w5e06_pb_p1000.json
+  state_config_file: state_itm_w5e06_pb_p1000.json
+- job_id: itm_w5e06_pb_p1200
+  parameters:
+    internal_target_match:
+      weight: 5e6
+    pressure_boundary:
+      pressure_magnitude: 1200
+  run_config_file: run_itm_w5e06_pb_p1200.json
+  state_config_file: state_itm_w5e06_pb_p1200.json
+- job_id: itm_w5e06_pb_p1500
+  parameters:
+    internal_target_match:
+      weight: 5e6
+    pressure_boundary:
+      pressure_magnitude: 1500
+  run_config_file: run_itm_w5e06_pb_p1500.json
+  state_config_file: state_itm_w5e06_pb_p1500.json
+parameter_info:
+  internal_target_match:
+    description: Internal target match functional weight
+    weight_range:
+    - 1e4
+    - 5e4
+    - 5e5
+    - 1e6
+    - 5e6
+  pressure_boundary:
+    description: Pressure boundary magnitude (replaces 1200 in -1200*(t/4))
+    pressure_range:
+    - 600
+    - 800
+    - 1000
+    - 1200
+    - 1500
 total_jobs: 25

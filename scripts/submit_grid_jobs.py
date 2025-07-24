@@ -113,7 +113,7 @@ def main():
     job_list_path = project_root / "configs" / "generated" / "job_list.yaml"
     template_path = project_root / "job_templates" / "slurm_template.sh"
     results_dir = project_root / "results"
-    base_data_dir = project_root / "cervix_inflation_EX_V2_original"
+    base_data_dir = project_root / "cervix_inflation_EX_V2_original_dual_deformed_fine"
     
     # Check required files exist
     required_files = [job_list_path, template_path, base_data_dir]

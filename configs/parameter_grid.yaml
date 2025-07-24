@@ -1,17 +1,22 @@
-# Parameter grid for smooth_layer_thickness functional
-smooth_layer_thickness:
-  weight: [1e3, 3.16e3, 1e4, 3.16e4, 1e5]  # Different weight values
-  dhat: [0.001, 0.004, 0.016, 0.064, 0.256]     # Different dhat values
+# Parameter grid for multiple functionals and boundary conditions
+parameters:
+  # Internal target match functional weight
+  internal_target_match:
+    weight: [1e4, 5e4, 5e5, 1e6, 5e6]
+  
+  # Pressure boundary values (will replace the 1200 in "-1200 * (t/4)")
+  pressure_boundary:
+    pressure_magnitude: [600, 800, 1000, 1200, 1500]
 
 # Base configuration paths (relative to project root)
 base_config:
-  run_config: "cervix_inflation_EX_V2_original/run_MR_Conradlow.json"
-  state_config: "cervix_inflation_EX_V2_original/state_MR_Conradlow.json"
-  data_dir: "cervix_inflation_EX_V2_original"
+  run_config: "cervix_inflation_EX_V2_original_dual_deformed_fine/run_MR_Conradlow_dual.json"
+  state_config: "cervix_inflation_EX_V2_original_dual_deformed_fine/state_MR_Conradlow.json"
+  data_dir: "cervix_inflation_EX_V2_original_dual_deformed_fine"
 
 # HPC settings for Ginsburg
 hpc:
-  walltime: "22:00:00"      # Based on your typical 7-hour interactive sessions
+  walltime: "11:30:00"      # Based on your typical 7-hour interactive sessions
   nodes: 1
   cpus_per_task: 16         # Based on your typical -c 16
   memory: "64GB"           # Based on your typical --mem=128G
