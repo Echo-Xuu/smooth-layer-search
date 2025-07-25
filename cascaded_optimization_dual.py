@@ -445,18 +445,16 @@ def do_tetwild_remesh(remesh_reload_function, ftetwild_build_dir, base_path, edg
             "Must supply a valid fTetWild build directory for remeshing!")
     # Build the command with optional edge length parameter
     cmd = [
-        os.path.join(ftetwild_build_dir, "FloatTetwild_bin"),
-        "-i", surf_mesh_fname,
-        "-o", mesh_fname
+        os.path.join(ftetwild_build_dir, "TetWild"),
+        surf_mesh_fname,  # input as positional argument
+        mesh_fname        # output as positional argument
     ]
     if edge_length is not None:
         if edge_length <= 0:
             raise ValueError("Edge length must be positive")
-        cmd.extend(["-l", str(edge_length)])
-    
-    subprocess.run(cmd, stdout=subprocess.DEVNULL)
-    new_opt_vertex_count = remesh_reload_function(mesh_fname)
-    return new_opt_vertex_count
+        # Insert edge length option before the positional arguments
+        cmd.insert(1, "-l")
+        cmd.insert(2, str(edge_length))
 
 
 def main():
