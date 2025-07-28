@@ -54,7 +54,9 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     simulation_step_pattern = r'\[polyfem\] \[info\] (\d+)/(\d+)\s+t=[\d.]+$'  # e.g., "1/16 t=0.25" or "16/16 t=4"
     simulation_time_pattern = r'\[polyfem\] \[info\]\s+took\s+([\d.]+)s'
     
-    target_match_pattern = r'\[adjoint-polyfem\] \[debug\] \[target_match\] ([\d.]+)'
+    # Updated objective patterns - now separate internal and external target match
+    internal_target_match_pattern = r'\[adjoint-polyfem\] \[debug\] \[internal_target_match\] ([\d.]+)'
+    external_target_match_pattern = r'\[adjoint-polyfem\] \[debug\] \[external_target_match\] ([\d.]+)'
     collision_barrier_pattern = r'\[adjoint-polyfem\] \[debug\] \[collision_barrier\] ([\d.]+)'
     smooth_layer_pattern = r'\[adjoint-polyfem\] \[debug\] \[smooth_layer_thickness\] ([\d.]+)'
     boundary_smoothing_pattern = r'\[adjoint-polyfem\] \[debug\] \[boundary_smoothing\] ([\d.]+)'
@@ -155,7 +157,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                         'simulation_in_iteration': -1,  # Will be set when iteration is saved
                         'simulation_time': None,  # Incomplete simulation
                         'status': 'incomplete',
-                        'target_match': None,
+                        'internal_target_match': None,
+                        'external_target_match': None,
                         'collision_barrier': None,
                         'smooth_layer_thickness': None,
                         'boundary_smoothing': None
@@ -189,7 +192,7 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     cp_str = f"{control_points} control points" if control_points != 'full' else "full vertices"
                     print(f"Found completed simulation: {sim_time}s at level {level} ({cp_str}) for {iter_str}")
                 
-                # Create simulation record
+                # Create simulation record with updated fields
                 sim_record = {
                     'level': pending_simulation['level'],
                     'control_points': pending_simulation['control_points'],
@@ -197,7 +200,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
                     'simulation_in_iteration': -1,  # Will be set when iteration is saved
                     'simulation_time': sim_time,
                     'status': 'completed',
-                    'target_match': None,
+                    'internal_target_match': None,
+                    'external_target_match': None,
                     'collision_barrier': None,
                     'smooth_layer_thickness': None,
                     'boundary_smoothing': None
@@ -213,9 +217,14 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
         if pending_simulations:
             last_sim = pending_simulations[-1]
             
-            target_match = re.search(target_match_pattern, line)
-            if target_match:
-                last_sim['target_match'] = float(target_match.group(1))
+            # Updated objective patterns - now separate internal and external target match
+            internal_target_match = re.search(internal_target_match_pattern, line)
+            if internal_target_match:
+                last_sim['internal_target_match'] = float(internal_target_match.group(1))
+            
+            external_target_match = re.search(external_target_match_pattern, line)
+            if external_target_match:
+                last_sim['external_target_match'] = float(external_target_match.group(1))
             
             collision_barrier_match = re.search(collision_barrier_pattern, line)
             if collision_barrier_match:
@@ -268,7 +277,8 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
             'simulation_in_iteration': len(pending_simulations),
             'simulation_time': None,
             'status': 'incomplete',
-            'target_match': None,
+            'internal_target_match': None,
+            'external_target_match': None,
             'collision_barrier': None,
             'smooth_layer_thickness': None,
             'boundary_smoothing': None
@@ -284,8 +294,10 @@ def extract_optimization_data(log_file_path, output_csv_path, verbose=True):
     if simulation_data:
         try:
             with open(output_csv_path, 'w', newline='') as csvfile:
+                # Updated fieldnames to include both internal and external target match
                 fieldnames = ['level', 'control_points', 'iteration', 'simulation_in_iteration', 'simulation_time', 
-                             'status', 'target_match', 'collision_barrier', 'smooth_layer_thickness', 'boundary_smoothing']
+                             'status', 'internal_target_match', 'external_target_match', 'collision_barrier', 
+                             'smooth_layer_thickness', 'boundary_smoothing']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 
                 # Write header
